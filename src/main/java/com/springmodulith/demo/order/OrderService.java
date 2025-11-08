@@ -10,4 +10,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class OrderService {
     private final InventoryService inventoryService;
+
+    public OrderDto createOrder(){
+        inventoryService.fetchAllInName(null);
+    }
 }
