@@ -6,6 +6,3 @@ spring:
   sql:
     init:
       mode: always
-  modulith:
-    events:
-      republish-outstanding-events-on-restart: true
