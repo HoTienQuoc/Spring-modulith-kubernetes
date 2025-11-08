@@ -1,0 +1,17 @@
+package com.springmodulith.demo.inventory.exposed;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class InventoryDto {
+    private Long id;
+    private String name;
+    private String description;
+    private long price;
+}
