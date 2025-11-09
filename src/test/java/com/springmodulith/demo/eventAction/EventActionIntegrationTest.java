@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.modulith.test.ApplicationModuleTest;
 
+import com.springmodulith.demo.eventAction.action.Action;
+import com.springmodulith.demo.eventAction.action.RepublishUncompletedEvent;
+
 @ApplicationModuleTest
 class EventActionIntegrationTest {
 

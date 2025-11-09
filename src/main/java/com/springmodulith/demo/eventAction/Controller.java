@@ -1,0 +1,28 @@
+package com.springmodulith.demo.eventAction;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.springmodulith.demo.eventAction.action.Action;
+import com.springmodulith.demo.eventAction.action.RepublishUncompletedEvent;
+
+/**
+ * @author : Ezekiel Eromosei
+ * @code @created : 31 May, 2024
+ */
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping(path = "event-action")
+public class Controller {
+
+    private final RepublishUncompletedEvent republishUncompletedEvent;
+
+    @GetMapping
+    public ResponseEntity<String> publishEvent(@RequestParam(name = "action") String action) {
+        republishUncompletedEvent.republish(Action.getActionByName(action));
+        return new ResponseEntity<>("Event Triggered", HttpStatus.NO_CONTENT);
+    }
+}
