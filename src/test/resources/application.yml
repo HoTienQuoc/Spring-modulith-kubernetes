@@ -19,4 +19,4 @@ spring:
 
 logging:
   level:
-    org.springframework.modulith: DEBUG
+    "[org.springframework.modulith]": DEBUG
