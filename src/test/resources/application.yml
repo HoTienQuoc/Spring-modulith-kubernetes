@@ -2,7 +2,7 @@ spring:
   datasource:
     username: ${MODULITH_USERNAME:modulith}
     password: ${MODULITH_PASSWORD:modulith}
-    url: jdbc:postgresql://${MODULITH_HOST}:${MODULITH_PORT:5432}/${MODULITH_DB_NAME}
+    url: jdbc:postgresql://${MODULITH_HOST:localhost}:${MODULITH_PORT:5432}/${MODULITH_DB_NAME:testdb}
   jpa:
     hibernate:
       ddl-auto: update
@@ -11,11 +11,6 @@ spring:
   sql:
     init:
       mode: always
-
-#  docker:
-#    compose:
-#      skip:
-#        in-tests: true
 
 logging:
   level:
