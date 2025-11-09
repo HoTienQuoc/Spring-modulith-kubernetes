@@ -24,25 +24,29 @@ jobs:
           step_level_env: stepenv
         run: echo " job env ${{ env.job_env }}   step env ${{ env.step_level_env }}"
 
-
   build-job-section:
     environment: action
     runs-on: ubuntu-latest
 
-    container: postgres
     services:
       postgres:
-        image: 'postgres:latest'
+        image: postgres:latest
         env:
           POSTGRES_DB: ${{ vars.MODULITH_DB_NAME }}
           POSTGRES_PASSWORD: ${{ secrets.MODULITH_PASSWORD }}
           POSTGRES_USER: ${{ secrets.MODULITH_USERNAME }}
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.MODULITH_USERNAME }}"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Get Code
         uses: actions/checkout@v4
+
       - name: Set Up JDK 25
         uses: actions/setup-java@v4
         with:
@@ -54,63 +58,71 @@ jobs:
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: 3.8.2
-      - name: Output Info
-        run: ls && mvn -version && ls /opt
 
-      - name: show host environment variable
+      - name: Verify setup
+        run: java -version && mvn -version
+
+      - name: Show host environment variable
         run: echo "host ${{ vars.MODULITH_HOST }}  db name  ${{ vars.MODULITH_DB_NAME }}"
 
-      - name: run maven test
+      - name: Run Maven tests
         env:
           MODULITH_USERNAME: ${{ secrets.MODULITH_USERNAME }}
           MODULITH_PASSWORD: ${{ secrets.MODULITH_PASSWORD }}
-          MODULITH_HOST: ${{ vars.MODULITH_HOST }}
-          MODULITH_PORT: ${{ vars.MODULITH_PORT }}
+          MODULITH_HOST: postgres
+          MODULITH_PORT: 5432
           MODULITH_DB_NAME: ${{ vars.MODULITH_DB_NAME }}
-        run: mvn clean test
+          SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${{ vars.MODULITH_DB_NAME }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.MODULITH_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.MODULITH_PASSWORD }}
+        run: mvn -B clean test -fae
 
-      - name: Build with maven
-        run: mvn clean package -DskipTests -Dspring-boot.run.profiles=${{ vars.SPRING_PROFILE }}
-      - name: list files
-        run: ls target/**
+      - name: Build with Maven (skip tests)
+        run: mvn clean package -DskipTests -Dspring.profiles.active=${{ vars.SPRING_PROFILE }}
 
-      - name: upload artifacts
+      - name: List build output
+        run: ls target/
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: spring-modulith-artifact
           path: |
             target/spring-modulith-course-0.0.1-SNAPSHOT.jar
             Dockerfile
-          overwrite: 'true'
+          overwrite: true
           retention-days: 5
 
   push-image-section:
     environment: action
     needs: build-job-section
     runs-on: ubuntu-latest
+
     steps:
-      - name: print something
+      - name: Print environment
         run: echo " job env ${{ env.job_env }}"
 
-      - name: download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: spring-modulith-artifact
 
       - name: Output downloaded contents
-        run: ls && ls target/**
+        run: ls && ls target/
 
-      - name: login
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
-          password:  ${{ secrets.DOCKER_PASSWORD }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: push image
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/mudlith:1.0
+          tags: ${{ secrets.DOCKER_USERNAME }}/modulith:1.0
           context: .
-          file: ./Dockerfile_old
-          builder: ${{ steps.buildx.outputs.name }}
+          file: ./Dockerfile
