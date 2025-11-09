@@ -7,10 +7,10 @@ spring:
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true
-    show-sql: true
+    show-sql: false
   sql:
     init:
-      mode: always
+      mode: never
 
 logging:
   level:
